@@ -33,3 +33,35 @@ vi Desktop/SQLDeveloper.app/Contents/Resources/sqldeveloper/sqldeveloper/bin/sql
 AddVMOption -Duser.language=ko 
 AddVMOption -Duser.country=KR
 ```
+
+
+
+
+### CF) 참고 기본 SQL
+
+```sql
+-- Table 조회
+SELECT TABLE_NAME
+  FROM ALL_TABLES
+ WHERE OWNER      = :owner
+   AND TABLE_NAME = :tbl_nm;
+
+-- PK 정보 조회
+SELECT 
+	  A.TABLE_NAME
+	, A.COLUMN_NAME
+	, A.DATA_TYPE
+	, A.DATA_LENGTH
+	, A.DATA_PRECISION
+	, A.DATA_SCALE
+	, A.NULLABLE
+	, B.COLUMN_POSITION
+  FROM ALL_TAB_COLS A, ALL_IND_COLUMNS B
+ WHERE A.OWNER			= B.TABLE_OWNER(+)
+   AND A.TABLE_NAME		= B.TABLE_NAME(+)
+   AND A.COLUMN_NAME	= B.COLUMN_NAME(+)
+   AND A.OWNER			= :owner
+   AND B.INDEX_NAME		= :index_name		-- index_name은 뒤에는 '_PK'로 끝나야 한다
+ ORDER BY A.COLUMN_ID
+```
+

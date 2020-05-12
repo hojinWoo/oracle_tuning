@@ -1,17 +1,21 @@
+/*
+  PROCEDURE 생성
+  PARAM : P_GEN_AMOUNT (건수), P_COMMIT_NUM (Commit 건수 단위)
+*/
 CREATE OR REPLACE PROCEDURE DEV.GENERATE_ORD_BASE (P_GEN_AMOUNT NUMBER, P_COMMIT_NUM NUMBER)
 IS
     V_QUOTIENT      NUMBER;
     V_REMAINDER     NUMBER;
     V_COMMIT_CNT    NUMBER := 0;
-    
+
     V_ERR_CD        NUMBER;
     V_ERR_MSG       VARCHAR(1024);
 BEGIN
 
     SELECT  CEIL(P_GEN_AMOUNT/P_COMMIT_NUM), MOD(P_GEN_AMOUNT,P_COMMIT_NUM) INTO V_QUOTIENT, V_REMAINDER
     FROM    DUAL;
-    
-    
+
+
     FOR i IN 1..V_QUOTIENT LOOP
 
         INSERT  /*+ APPEND */  INTO DEV.ORD_TEMP (
@@ -24,7 +28,7 @@ BEGIN
               , ALPHABET
               , ALPHABET_NUMERIC
             )
-        SELECT  
+        SELECT
                 YYYY || MM ||
                 CASE
                     WHEN MM = '02' THEN TO_CHAR(TRUNC(DBMS_RANDOM.VALUE(1, 29)), 'FM09')
@@ -39,7 +43,7 @@ BEGIN
               , ALPHABET
               , ALPHABET_NUMERIC
         FROM    (
-                    SELECT  
+                    SELECT
                             TO_CHAR(TRUNC(DBMS_RANDOM.VALUE(2012, 2014))) YYYY
                           , TO_CHAR(TRUNC(DBMS_RANDOM.VALUE(1, 13)), 'FM09') MM
                           , TO_CHAR(TRUNC(DBMS_RANDOM.VALUE(9, 23)), 'FM09') HH
@@ -63,7 +67,7 @@ BEGIN
         V_COMMIT_CNT := V_COMMIT_CNT + SQL%ROWCOUNT;
 
         COMMIT;
-        
+
     END LOOP;
 
     DBMS_OUTPUT.PUT_LINE(TO_CHAR(V_COMMIT_CNT) || '건이 저장되었습니다.');
@@ -89,13 +93,13 @@ IS
     i               INT;
     j               INT;
     V_COMMIT_CNT    NUMBER := 0;
-    
+
     V_ERR_CD        NUMBER;
     V_ERR_MSG       VARCHAR(1024);
 BEGIN
-    
+
     SELECT  CEIL(P_GEN_AMOUNT/P_COMMIT_NUM), MOD(P_GEN_AMOUNT,P_COMMIT_NUM) INTO V_QUOTIENT, V_REMAINDER FROM DUAL;
-    
+
     IF V_QUOTIENT = 1 AND V_REMAINDER > 0 THEN
         V_END_IDX := V_REMAINDER;
     ELSE
@@ -117,7 +121,7 @@ BEGIN
                   , ALPHABET
                   , ALPHABET_NUMERIC
                 )
-            SELECT  
+            SELECT
                     ORD_NO
                   , ITEM_ID
                   , ITEM_QTY
@@ -129,7 +133,7 @@ BEGIN
                   , ALPHABET
                   , ALPHABET_NUMERIC
             FROM    (
-                        SELECT  
+                        SELECT
                                 A.ORD_NO
                               , A.ITEM_ID
                               , A.ITEM_QTY
@@ -141,12 +145,12 @@ BEGIN
                               , O.ALPHABET
                               , O.ALPHABET_NUMERIC
                         FROM    (
-                                    SELECT  
+                                    SELECT
                                             ORD_NO
                                           , ITEM_ID
                                           , SUM(ITEM_QTY) ITEM_QTY
                                     FROM    (
-                                                SELECT  
+                                                SELECT
                                                         j ORD_NO
                                                       , TRUNC(DBMS_RANDOM.VALUE(1, 93)) ITEM_ID
                                                       , TRUNC(DBMS_RANDOM.VALUE(1, 10)) ITEM_QTY
@@ -166,7 +170,7 @@ BEGIN
         END LOOP;
 
         COMMIT;
-        
+
         IF i < V_QUOTIENT THEN
             V_START_IDX := V_END_IDX + 1;
             V_END_IDX := V_END_IDX + P_COMMIT_NUM;
@@ -177,7 +181,7 @@ BEGIN
             V_START_IDX := V_END_IDX + 1;
             V_END_IDX := V_END_IDX + V_REMAINDER;
         END IF;
-    
+
     END LOOP;
 
     DBMS_OUTPUT.PUT_LINE(TO_CHAR(V_END_IDX - P_COMMIT_NUM) || '건의 주문에 대한 주문상품 ' || TO_CHAR(V_COMMIT_CNT) || '건이 저장되었습니다.');
@@ -192,4 +196,3 @@ EXCEPTION
 
 END;
 /
-
